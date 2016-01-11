@@ -4,24 +4,26 @@
 	if(!defined('ACCESS')){
 		exit;
 	}
+
 	
 	class Application{
 		//1,初始化字符集
 		private static function setHeader(){
 			header('Content-type:text/html;charset=utf-8');
 		}
+		
 		//2,初始化系统常量
 		private static function setConst(){
 			//定义根目录常量
 			define('ROOT_DIR',str_replace('/Core', '',str_replace('\\','/',__DIR__)));
 			//定义其他目录
 			define('CORE_DIR', 		ROOT_DIR.'/Core');
-			define('ACTION_DIR', 	ROOT_DIR.'/Action');
+			define('ACTION_DIR', 		ROOT_DIR.'/Action');
 			define('CONF_DIR', 		ROOT_DIR.'/Conf');
-			define('MODEL_DIR', 	ROOT_DIR.'/Model');
+			define('MODEL_DIR', 		ROOT_DIR.'/Model');
 			define('VIEW_DIR', 		ROOT_DIR.'/View');
-			define('PUBLIC_DIR', 	ROOT_DIR.'/Public');
-		}
+			define('PUB_DIR', 		ROOT_DIR.'/Public');
+		} 
 
 		//3,错误信息
 		private static function setErrors(){
@@ -78,17 +80,24 @@
 		
 		//6, 加载配置文件
 		private static function setConfig(){
-			$GLOBALS['$config']=include_once CONF_DIR.'/config.php';
+			$GLOBALS['config']=include_once CONF_DIR.'/config.php';
 		}
 		
 		//7, URL初始化
 		private static function setUrl(){
 			//获取用户url信息(get方式提交的数据)
 			//module:请求的模块(控制器)
-			$module=isset($_GET['module'])?$_GET['module']:'privilege';
+			$module=isset($_REQUEST['module'])?$_REQUEST['module']:'privilege';
 			//action:请求的方法
-			$action=isset($_GET['action'])?$_GET['action']:'login';
+			$action=isset($_REQUEST['action'])?$_REQUEST['action']:'login';
 		
+			//处理字符串
+			//1, 全部转小写
+			$module=strtolower($module);
+			$action=strtolower($action);
+			//2, 类的首字母大写,方法不需要(linux文件是分大小写的)
+			$module=ucfirst($module);
+			
 			//将获取的数据定义为常量
 			define('MODULE', $module);
 			define('ACTION', $action);
@@ -97,7 +106,7 @@
 		//8,权限验证
 		private static function setPrivilege(){
 			//放行不需要验证的控制器方法
-			if(!(MODUEL=='privilege'&&(ACTION=='login'||ACTION=='signin'||ACTION=='captcha'))){
+			if(!(MODULE=='Privilege'&&(ACTION=='login'||ACTION=='signin'||ACTION=='captcha'))){
 				//加了! 除了以上请求都需要验证
 				if (!isset($_SESSION['user'])){
 					//用户没有登录直接跳转
@@ -106,6 +115,17 @@
 			}
 		}
 		
+		//9, 分发
+		private static function setDispatch(){
+			//找到对应的控制器的类,实例化,再调用对应的方法即可
+			//得到控制器名字
+			$module=MODULE.'Action';	
+			//创建控制器对象
+			$module=new $module();
+			$action=ACTION;
+			$module->$action();	//调用控制器中的方法
+			
+		}
 		
 		//初始化方法
 		public static function run(){
@@ -126,5 +146,7 @@
 			self::setUrl();
 			//8,权限验证
 			self::setPrivilege();
+			//9,分发
+			self::setDispatch();
 		}
 	}
