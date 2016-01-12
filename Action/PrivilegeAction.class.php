@@ -4,7 +4,9 @@
 		
 		//方法:与action的值一致
 		public function login(){
-			include_once VIEW_DIR.'/login.html';
+			//include_once VIEW_DIR.'/login.html';
+			//加载模版交由视图类的对象来处理
+			$this->view->display('login.html');
 		}
 		
 		//登录验证
@@ -37,7 +39,7 @@
 				//更新用户信息
 				$admin->updateLoginInfo($user['a_id']);
 				//$this->success('index.php?module=index&action=index', '登录成功');
-				$this->success('test.php','登录成功');
+				$this->success('index.php?module=index&action=index','登录成功，正在跳转！');
 			}else{
 				//失败
 				$this->failure('index.php','登录失败',3);
